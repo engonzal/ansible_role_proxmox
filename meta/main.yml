@@ -1,0 +1,25 @@
+---
+galaxy_info:
+  role_name: proxmox
+  author: engonzal
+  description: Package installation for Linux.
+  license: BSD
+  company: buildahomelab.com
+  min_ansible_version: 2.7
+  galaxy_tags:
+    - proxmox
+    - proxmoxer
+    - lxc
+    - lxd
+  platforms:
+    - name: EL
+      versions:
+        - 7
+    - name: Debian
+      versions:
+        - stretch
+    - name: Ubuntu
+      versions:
+        - xenial
+        - bionic
+dependencies: []
