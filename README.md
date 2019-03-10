@@ -1,5 +1,7 @@
 ### Ansible Roles: Proxmox
-Module to setup a new container or add mounts.  Note that you must have root ssh to a proxmox node configured.  You must also have api access to your proxmox host/cluster.
+This is a role to setup a new container.  Note that you must have root ssh to a proxmox node configured.  You must also have api access to your proxmox host/cluster.
+
+This role will primarily run on the ansible localhost.  Some tasks will use the "delegate_to" option to run on the remote Proxmox node.
 
 #### Role Variables
 Lots of variables are available to use for provisioning a container.  Required will depend on your use case.  Most are optional.
@@ -9,7 +11,6 @@ Simple Container:
 pve_node: pve1
 pve_apiuser: root@pam
 pve_apipass: myAPIpassword
-pve_api_host: pve1.domain.com
 pve_hostname: "newhostname"
 pve_template: local:vztmpl/debian-9.0-standard_9.5-1_amd64.tar.gz
 ```
@@ -40,7 +41,15 @@ pve_custom_mounts:
 ```
 
 #### Example Playbook
+Ansible hosts inventory file
 ```yaml
+# hosts
+[proxmox_containers]
+test_server
+```
+Ansible playbook
+```yaml
+# proxmox.yml
 ---
 - hosts: plex_app
   connection: local
@@ -55,7 +64,11 @@ pve_custom_mounts:
   roles:
     - engonzal.proxmox
 ```
-
+Ansible run command
+```
+ansible-playbook -i hosts -l test_server proxmox.yml
+```
+#### Example Playbook (advanced)
 You can also add a delay after your play if you have other plays to run after:
 
 ```yaml
@@ -63,14 +76,26 @@ You can also add a delay after your play if you have other plays to run after:
 - hosts: plex_app
   connection: local
   user: root
+  pre_tasks:
+  - name: get current python interpreter (for pip virtualenvs)
+    command: which python
+    register: which_interpreter
+    tags: always
+    changed_when: False
+
+  - name: Use the current python path instead of system python
+    set_fact:
+      ansible_python_interpreter: "{{ which_interpreter.stdout }}"
+    tags: always
+
   roles:
     - name: engonzal.proxmox
       tags: pve
   post_tasks:
-    - name: Allow CT to boot
+    - name: Allow container time to boot if started
       pause:
         seconds: 20
-      when: "'running' not in pve_info_state.msg"
+      when: pve_info_state.changed
 
 - hosts: plex_app
   user: root
