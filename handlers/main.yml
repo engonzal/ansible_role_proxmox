@@ -1,2 +1,12 @@
 ---
 # handlers file for engonzal.proxmox
+- name: Start container
+  proxmox:
+    vmid: "{{ pve_vmid | default(pve_new_vmid) | int }}"
+    api_user: "{{ pve_apiuser }}"
+    api_password: "{{ pve_apipass }}"
+    api_host: "{{ pve_api_host }}"
+    state: started
+  delegate_to: localhost
+  register: pve_info_state
+
