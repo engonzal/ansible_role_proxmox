@@ -21,11 +21,11 @@
   delegate_to: "{{ pve_node }}"
   register: pve_ct_template_download
   ignore_errors: True
-  when: pve_ct_template_exists | bool == False
+  when: not pve_ct_template_exists
 
 - name: Fail when template download has errors
   fail: msg="Failed to find container, error is {{ pve_ct_template_download.stderr_lines }}"
-  when: pve_ct_template_exists | bool == False and pve_ct_template_download.rc != 0
+  when: not pve_ct_template_exists and pve_ct_template_download.rc != 0
   
 - name: Provision container
   proxmox:
@@ -58,4 +58,4 @@
 - name: Get vmid from new container when not specified
   set_fact:
     pve_new_vmid:  "{{ pve_info.msg.split(' ')[2] }}"
-  when: pve_info.changed | bool == true and pve_vmid is not defined
+  when: pve_info.changed and pve_vmid is not defined

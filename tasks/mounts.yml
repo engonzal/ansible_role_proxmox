@@ -2,8 +2,8 @@
   set_fact:
     pve_new_vmid:  "{{ pve_info.msg.split('exists and has ID number ')[1] }}"
   when: 
-    - pve_info.failed | bool == false
-    - pve_info.changed | bool == false
+    - not pve_info.failed
+    - not pve_info.changed
 
 - name: Get container config
   command: pct config {{ pve_vmid | default (pve_new_vmid)}}
@@ -16,6 +16,6 @@
   loop: "{{ pve_custom_mounts | default({})|dict2items }}"
   when:
     - pve_custom_mounts is defined
-    - pve_info.failed | bool == false
+    - not pve_info.failed
     - item.key not in pve_info_mounts.stdout
   delegate_to: "{{ pve_node }}"

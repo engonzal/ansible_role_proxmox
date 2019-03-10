@@ -8,12 +8,12 @@
 
 - name: Provision Container
   include_tasks: provision.yml
-  when: pve_container_exists | bool == False
+  when: not pve_container_exists 
 
 - name: Configure mounts
   include_tasks: mounts.yml
   when:
-    - pve_container_exists | bool == False 
+    - not pve_container_exists 
     - pve_custom_mounts is defined
 
 - name: Start Container if it was just created
@@ -26,7 +26,7 @@
   delegate_to: localhost
   register: pve_info_state
   when: 
-    - pve_container_exists | bool == False
+    - not pve_container_exists 
     - pve_info.changed 
     - pve_ct_state == "started"
 
