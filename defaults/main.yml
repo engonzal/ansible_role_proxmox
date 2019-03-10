@@ -1,2 +1,16 @@
 ---
 # defaults file for engonzal.proxmox
+pve_api_port: 8006
+pve_ct_state: "started"
+pve_api_host: "{{ pve_node }}"
+
+# Where your container image templates are located
+# You may need to set this to another storage source
+# ie "cephfs_data"
+pve_ct_storage_location: local
+
+# Used to combine container list from each node
+pve_ct_list_clean: []
+
+# Assume template doesn't exists until we check
+pve_ct_template_exists: false
