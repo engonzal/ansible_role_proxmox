@@ -8,25 +8,10 @@
 
 - name: Provision Container
   include_tasks: provision.yml
-  when: not pve_container_exists 
+  when: not pve_container_exists
 
 - name: Configure mounts
   include_tasks: mounts.yml
   when:
-    - not pve_container_exists 
+    - not pve_container_exists
     - pve_custom_mounts is defined
-
-- name: Start Container if it was just created
-  proxmox:
-    vmid: "{{ pve_vmid | default(pve_new_vmid) | int }}"
-    api_user: "{{ pve_apiuser }}"
-    api_password: "{{ pve_apipass}}"
-    api_host: "{{ pve_api_host }}"
-    state: started
-  delegate_to: localhost
-  register: pve_info_state
-  when: 
-    - not pve_container_exists 
-    - pve_info.changed 
-    - pve_ct_state == "started"
-
