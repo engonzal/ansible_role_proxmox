@@ -2,7 +2,7 @@
 galaxy_info:
   role_name: proxmox
   author: engonzal
-  description: Package installation for Linux.
+  description: Provision Proxmox LCV containers with Ansible
   license: BSD
   company: buildahomelab.com
   min_ansible_version: 2.7
