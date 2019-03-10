@@ -1,0 +1,61 @@
+---
+- name: Get list available templates on node
+  uri: 
+    url: "https://{{ pve_node }}:{{ pve_api_port }}/api2/json/nodes/{{ pve_node }}/storage/{{ pve_ct_storage_location }}/content"
+    method: GET
+    headers:
+      Cookie: "PVEAuthCookie={{ pve_node_ticket.json.data.ticket }}"
+    body_format: form-urlencoded
+    return_content: yes
+    validate_certs: "{{ pve_disable_cert_check | default('no') }}"
+  register: pve_ct_template_list
+
+- name: Determine if template is available on node
+  set_fact: 
+    pve_ct_template_exists: true
+  loop: "{{ pve_ct_template_list.json.data }}"
+  when: pve_template == item.volid
+
+- name: Download template if missing
+  command: pveam download {{ pve_ct_storage_location }} {{ pve_template.split('local:vztmpl/')[1] }}
+  delegate_to: "{{ pve_node }}"
+  register: pve_ct_template_download
+  ignore_errors: True
+  when: pve_ct_template_exists | bool == False
+
+- name: Fail when template download has errors
+  fail: msg="Failed to find container, error is {{ pve_ct_template_download.stderr_lines }}"
+  when: pve_ct_template_exists | bool == False and pve_ct_template_download.rc != 0
+  
+- name: Provision container
+  proxmox:
+    vmid: "{{ pve_vmid | default(omit) }}"
+    node: "{{ pve_node | default(omit) }}"
+    api_user: "{{ pve_apiuser }}"
+    api_password: "{{ pve_apipass}}"
+    api_host: "{{ pve_api_host }}"
+    state: "{{ pve_state | default('present') }}"
+    hostname: "{{ pve_hostname | default(omit)}}"
+    ostemplate: "{{ pve_template | default (omit) }}"
+    mounts: "{{ pve_mounts | default(omit) }}"
+    netif: "{{ pve_netif | default(omit) }}"
+    cores: "{{ pve_cores | default(omit) }}"
+    memory: "{{ pve_mem | default(omit) }}"
+    swap: "{{ pve_swap | default(omit) }}"
+    password: "{{ pve_guest_pass | default(omit) }}"
+    searchdomain: "{{ pve_search | default(omit) }}"
+    nameserver: "{{ pve_dns | default(omit) }}"
+    storage: "{{ pve_storage | default(omit) }}"
+    disk: "{{ pve_disk_size | default(omit) }}"
+    unprivileged: "{{ pve_unprivileged | default(omit)}}"
+    pubkey: "{{ pve_ssh | default(omit) }}"
+    onboot: "{{ pve_onboot | default(omit) }}"
+    timeout: 90
+  register: pve_info
+  async: 45
+  poll: 5
+
+- name: Get vmid from new container when not specified
+  set_fact:
+    pve_new_vmid:  "{{ pve_info.msg.split(' ')[2] }}"
+  when: pve_info.changed | bool == true and pve_vmid is not defined

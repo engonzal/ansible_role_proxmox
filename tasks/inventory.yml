@@ -1,0 +1,55 @@
+---
+- name: Get proxmox api auth ticket
+  uri:
+    url: "https://{{ pve_node }}:{{ pve_api_port }}/api2/json/access/ticket"
+    method: POST
+    body:
+      username: "{{ pve_apiuser }}"
+      password: "{{ pve_apipass }}"
+    validate_certs: "{{ pve_disable_cert_check | default('no') }}"
+    follow_redirects: all
+    body_format: form-urlencoded
+  register: pve_node_ticket
+
+- name: Get list of proxmox nodes
+  uri:
+    url: "https://{{ pve_node }}:{{ pve_api_port }}/api2/json/nodes"
+    method: GET
+    headers:
+      Cookie: "PVEAuthCookie={{ pve_node_ticket.json.data.ticket }}"
+    body_format: form-urlencoded
+    return_content: yes
+    validate_certs: "{{ pve_disable_cert_check | default('no') }}"
+  register: pve_node_list
+
+- name: Get list of existing containers for each node
+  uri:
+    url: "https://{{ pve_node }}:{{ pve_api_port }}/api2/json/nodes/{{ item.node }}/lxc"
+    method: GET
+    headers:
+      Cookie: "PVEAuthCookie={{ pve_node_ticket.json.data.ticket }}"
+    body_format: form-urlencoded
+    return_content: yes
+    validate_certs: "{{ pve_disable_cert_check | default('no') }}"
+  loop: "{{ pve_node_list.json.data }}"
+  register: pve_ct_list
+  # Output is very noisey
+  no_log: True
+
+- name: Compile list of all containers in cluster
+  set_fact:
+    pve_ct_list_clean: "{{ pve_ct_list_clean + item.json.data }}"
+  loop: "{{ pve_ct_list.results }}"
+  no_log: true
+
+- name: Container already exists
+  set_fact:
+    pve_container_exists: True
+  when: pve_hostname in pve_ct_list_clean|json_query('[*].name')
+
+- name: Container does not exist
+  set_fact:
+    pve_container_exists: False
+  when: pve_hostname not in pve_ct_list_clean|json_query('[*].name')
+
+

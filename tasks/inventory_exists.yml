@@ -1,0 +1,25 @@
+---
+- name: Identify node that container is currently running on
+  set_fact:
+    pve_existing_node: "{{ item.item.node }}"
+  when:
+    - pve_container_exists
+    - pve_hostname in item.json.data|json_query('[*].name')
+  loop: "{{ pve_ct_list.results  }}"
+  no_log: True
+
+- name: Get list of runnings containers for target node
+  set_fact:
+    pve_exists_node_list: "{{ item.json.data }}"
+  when: pve_hostname in item.json.data|json_query('[*].name')
+  loop: "{{ pve_ct_list.results  }}"
+  no_log: True
+
+- name: Get container facts
+  set_fact:
+    pve_exists_facts: "{{ item }}"
+  loop: "{{ pve_exists_node_list  }}"
+  when: item.name == pve_hostname
+  no_log: True
+
+- debug: msg="Proxmox container {{ pve_exists_facts.name }} exists on node {{ pve_existing_node }}"
