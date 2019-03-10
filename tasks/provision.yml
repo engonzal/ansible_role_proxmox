@@ -1,6 +1,6 @@
 ---
 - name: Get list available templates on node
-  uri: 
+  uri:
     url: "https://{{ pve_node }}:{{ pve_api_port }}/api2/json/nodes/{{ pve_node }}/storage/{{ pve_ct_storage_location }}/content"
     method: GET
     headers:
@@ -11,7 +11,7 @@
   register: pve_ct_template_list
 
 - name: Determine if template is available on node
-  set_fact: 
+  set_fact:
     pve_ct_template_exists: true
   loop: "{{ pve_ct_template_list.json.data }}"
   when: pve_template == item.volid
@@ -26,7 +26,7 @@
 - name: Fail when template download has errors
   fail: msg="Failed to find container, error is {{ pve_ct_template_download.stderr_lines }}"
   when: not pve_ct_template_exists and pve_ct_template_download.rc != 0
-  
+
 - name: Provision container
   proxmox:
     vmid: "{{ pve_vmid | default(omit) }}"
@@ -54,8 +54,6 @@
   register: pve_info
   async: 45
   poll: 5
+  notify: Set vmid
 
-- name: Get vmid from new container when not specified
-  set_fact:
-    pve_new_vmid:  "{{ pve_info.msg.split(' ')[2] }}"
-  when: pve_info.changed and pve_vmid is not defined
+

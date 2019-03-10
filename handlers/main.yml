@@ -10,3 +10,7 @@
   delegate_to: localhost
   register: pve_info_state
 
+- name: Set vmid
+  set_fact:
+    pve_new_vmid:  "{{ pve_info.msg.split(' ')[2] }}"
+  when: pve_vmid is not defined

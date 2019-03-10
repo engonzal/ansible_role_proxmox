@@ -1,12 +1,13 @@
+---
 - name: Set vmid var (existing)
   set_fact:
-    pve_new_vmid:  "{{ pve_info.msg.split('exists and has ID number ')[1] }}"
-  when: 
+    pve_new_vmid: "{{ pve_info.msg.split('exists and has ID number ')[1] }}"
+  when:
     - not pve_info.failed
     - not pve_info.changed
 
 - name: Get container config
-  command: pct config {{ pve_vmid | default (pve_new_vmid)}}
+  command: pct config {{ pve_vmid | default (pve_new_vmid) }}
   register: pve_info_mounts
   delegate_to: "{{ pve_node }}"
   changed_when: false
