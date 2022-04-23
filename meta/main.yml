@@ -1,8 +1,8 @@
 ---
 galaxy_info:
-  role_name: proxmox
+  role_name: proxmoxct
   author: engonzal
-  description: Provision Proxmox LCV containers with Ansible
+  description: Provision Proxmox LXC containers with Ansible
   license: BSD
   company: buildahomelab.com
   min_ansible_version: 2.7

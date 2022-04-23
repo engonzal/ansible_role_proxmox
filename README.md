@@ -1,12 +1,15 @@
-### Ansible Roles: Proxmox
+# Ansible Roles: Proxmox
+
 This is a role to setup a new container.  Note that you must have root ssh to a proxmox node configured.  You must also have api access to your proxmox host/cluster.
 
 This role will primarily run on the ansible localhost.  Some tasks will use the "delegate_to" option to run on the remote Proxmox node.
 
-#### Role Variables
+## Role Variables
+
 Lots of variables are available to use for provisioning a container.  Required will depend on your use case.  Most are optional.
 
 Simple Container:
+
 ```yaml
 pve_node: pve1
 pve_apiuser: root@pam
@@ -16,6 +19,7 @@ pve_template: local:vztmpl/debian-9.0-standard_9.5-1_amd64.tar.gz
 ```
 
 Detailed example with bind mounts from the Proxmox node.  I added a cephfs mount to my cluster, so it's mounted on each Proxmox node:
+
 ```yaml
 pve_node: pve1
 pve_vmid: 114
@@ -40,14 +44,18 @@ pve_custom_mounts:
   mp1: "/mnt/pve/cephfs_data/media,mp=/media"
 ```
 
-#### Example Playbook
+## Example Playbooka
+
 Ansible hosts inventory file
+
 ```yaml
 # hosts
 [proxmox_containers]
 test_server
 ```
+
 Ansible playbook
+
 ```yaml
 # proxmox.yml
 ---
@@ -62,13 +70,17 @@ Ansible playbook
     pve_hostname: "newhostname"
     pve_template: local:vztmpl/debian-9.0-standard_9.5-1_amd64.tar.gz
   roles:
-    - engonzal.proxmox
+    - engonzal.proxmoxct
 ```
+
 Ansible run command
-```
+
+```bash
 ansible-playbook -i hosts -l test_server proxmox.yml
 ```
-#### Example Playbook (advanced)
+
+### Example Playbook (advanced)
+
 You can also add a delay after your play if you have other plays to run after:
 
 ```yaml
@@ -89,7 +101,7 @@ You can also add a delay after your play if you have other plays to run after:
     tags: always
 
   roles:
-    - name: engonzal.proxmox
+    - name: engonzal.proxmoxct
       tags: pve
   post_tasks:
     - name: Allow container time to boot if started
@@ -107,8 +119,10 @@ You can also add a delay after your play if you have other plays to run after:
     - engonzal.package
 ```
 
-#### Other Examples
-DHCP Example:
+## Other Examples
+
+### DHCP Example:
+
 ```yaml
 pve_node: pve1
 pve_vmid: 114
@@ -126,7 +140,8 @@ pve_custom_mounts:
   mp1: "/mnt/pve/cephfs_data/media,mp=/media"
 ```
 
-#### Organization
+### Organization
+
 For my uses I organize the variables like this (using ansible vault to encrypt passwords):
 
 ```yaml
@@ -156,3 +171,9 @@ pve_custom_mounts:
 #### License
 
 BSD
+
+## Notes
+Proxmox api info available at:  
+
+* <https://pve.proxmox.com/pve-docs/api-viewer/index.html>
+* <https://pve.proxmox.com/wiki/Proxmox_VE_API>
